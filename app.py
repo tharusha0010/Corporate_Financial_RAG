@@ -78,7 +78,14 @@ else:
                 )
                 
                 if response.status_code == 200:
-                    bot_response = response.json().get("answer", "No answer found.")
+                    data = response.json()
+                    bot_response = data.get("answer", "No answer found.")
+                    sources = data.get("sources", [])
+                    
+                    if sources:
+                        bot_response += "\n\n**Sources:**"
+                        for src in sources:
+                            bot_response += f"\n- Page {src['page_num']} (Score: {src['score']:.2f}): {src['snippet']}"
                 else:
                     bot_response = "Error: Failed to connect to the backend API."
             except Exception as e:
