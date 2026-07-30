@@ -1,5 +1,3 @@
-
-
 ```markdown
 # 📈 Corporate Financial RAG System
 
@@ -7,7 +5,7 @@
 
 > **Scope:** Enterprise-grade intelligent retrieval and synthesis of corporate financial data (e.g., Annual 10-K reports)
 
-A full-stack, production-grade Retrieval-Augmented Generation (RAG) system designed to accurately answer complex queries based on corporate financial documents. The system uses a **Hybrid Search Pipeline**, a **Cross-Encoder Reranker**, and a locally hosted LLM via OLLAMA to ensure high-precision data retrieval and complete data privacy. It also includes scientific evaluation using the **RAGAS framework**.
+A full-stack, production-grade Retrieval-Augmented Generation (RAG) system designed to accurately answer complex queries based on corporate financial documents. The system uses a **Hybrid Search Pipeline**, a **Cross-Encoder Reranker**, and a locally hosted LLM via OLLAMA to ensure high-precision data retrieval and complete data privacy. 
 
 ---
 
@@ -16,7 +14,7 @@ A full-stack, production-grade Retrieval-Augmented Generation (RAG) system desig
 - **Hybrid Search Retrieval** — Combines Semantic Vector Search (ChromaDB + HuggingFace Embeddings) with Keyword Search (BM25) for absolute precision.
 - **Cross-Encoder Reranking** — Uses `ms-marco-MiniLM-L-6-v2` to intelligently rerank and filter the most relevant context chunks.
 - **Local LLM Integration** — Powered by **Gemma 3 (12B)** via OLLAMA for generating accurate financial answers with zero API costs.
-- **Scientific Evaluation** — Built-in RAGAS framework script to measure model Faithfulness and Answer Relevancy.
+- **Scientific Evaluation** — Built-in RAGAS framework script to measure model Faithfulness and Answer Relevancy (Achieving ~85% Relevancy Score).
 - **Full-Stack Architecture** — Robust backend powered by **FastAPI** paired with a **Streamlit** UI.
 - **Source Citations** — Dynamically displays referenced page numbers and document snippets for transparency.
 
@@ -160,8 +158,10 @@ User Question (Streamlit UI)
 
 ## 📄 Author
 
-This project was developed by **H.A.T.S. Ariyarathna** 
+This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
 
-*General Sir John Kotelawala Defence University (KDU)*
+*3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
+
+```
 
 ```
