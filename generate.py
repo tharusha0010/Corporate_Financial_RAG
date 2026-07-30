@@ -26,25 +26,6 @@ bm25_retriever.k = 5
 
 cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
-query = "What is the total revenue?"
-
-vector_results = vector_retriever.invoke(query)
-bm25_results = bm25_retriever.invoke(query)
-
-unique_docs = {}
-for doc in vector_results + bm25_results:
-    if doc.page_content not in unique_docs:
-        unique_docs[doc.page_content] = doc
-
-combined_results = list(unique_docs.values())
-pairs = [[query, doc.page_content] for doc in combined_results]
-scores = cross_encoder.predict(pairs)
-
-scored_docs = zip(scores, combined_results)
-sorted_docs = sorted(scored_docs, key=lambda x: x[0], reverse=True)
-
-context_text = "\n\n".join([doc.page_content for score, doc in sorted_docs[:3]])
-
 prompt_template = """Use the following pieces of context to answer the question at the end. 
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -55,14 +36,49 @@ Question: {question}
 Helpful Answer:"""
 
 prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-
 llm = ChatOllama(model="gemma3:12b")
 chain = prompt | llm
 
-print(f"\nQuery: {query}")
-print("\nGenerating answer via Gemma 3...\n")
-response = chain.invoke({"context": context_text, "question": query})
+print("\n--- RAG System is Ready! ---")
 
-print("--- Final Answer ---")
-print(response.content)
-print("--------------------")
+while True:
+    query = input("\nEnter your financial question (or type 'exit' to quit): ")
+    if query.lower() == 'exit':
+        break
+    
+    vector_results = vector_retriever.invoke(query)
+    bm25_results = bm25_retriever.invoke(query)
+
+    unique_docs = {}
+    for doc in vector_results + bm25_results:
+        if doc.page_content not in unique_docs:
+            unique_docs[doc.page_content] = doc
+
+    combined_results = list(unique_docs.values())
+    pairs = [[query, doc.page_content] for doc in combined_results]
+    
+    scores = cross_encoder.predict(pairs)
+    scored_docs = zip(scores, combined_results)
+    sorted_docs = sorted(scored_docs, key=lambda x: x[0], reverse=True)
+    top_3_docs = sorted_docs[:3]
+
+    context_parts = []
+    for score, doc in top_3_docs:
+        page_num = doc.metadata.get('page', 0) + 1 
+        context_parts.append(f"--- Page {page_num} ---\n{doc.page_content}")
+        
+    context_text = "\n\n".join(context_parts)
+
+    print("\nGenerating answer via Gemma 3...\n")
+    response = chain.invoke({"context": context_text, "question": query})
+
+    print("--- Final Answer ---")
+    print(response.content)
+    
+    print("\n--- Sources & Snippets ---")
+    for i, (score, doc) in enumerate(top_3_docs):
+        page_num = doc.metadata.get('page', 0) + 1
+        snippet = doc.page_content[:150].replace('\n', ' ') + "..."
+        print(f"[{i+1}] Page {page_num} (Relevance Score: {score:.4f})")
+        print(f"    Snippet: \"{snippet}\"\n")
+    print("--------------------------")
