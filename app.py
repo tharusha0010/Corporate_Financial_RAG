@@ -1,5 +1,5 @@
 import streamlit as st
-import time
+import requests
 
 st.set_page_config(page_title="Financial RAG System", page_icon="📈", layout="centered")
 
@@ -17,19 +17,25 @@ with st.sidebar:
 
     st.write("📄 **Upload your PDF**")
     
-    uploaded_file = st.file_uploader("", type="pdf", label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Upload PDF", type="pdf", label_visibility="collapsed")
 
     if uploaded_file is not None:
         st.info(f"📎 {uploaded_file.name}")
 
         if st.button("⚙️ Process PDF", use_container_width=True):
             with st.spinner("Processing your document..."):
-                time.sleep(3) 
-                
-                st.session_state.is_processed = True
-                st.session_state.active_pdf = uploaded_file.name
-            
-            st.success("✅ PDF processed successfully!")
+                try:
+                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")}
+                    response = requests.post("http://127.0.0.1:8000/upload", files=files)
+                    
+                    if response.status_code == 200:
+                        st.session_state.is_processed = True
+                        st.session_state.active_pdf = uploaded_file.name
+                        st.success("✅ PDF processed successfully!")
+                    else:
+                        st.error("Error: Failed to process PDF on backend.")
+                except Exception as e:
+                    st.error(f"Connection error: {e}")
             
     if st.session_state.is_processed:
         st.divider()
@@ -64,7 +70,19 @@ else:
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        bot_response = f"This is an answer based on {st.session_state.active_pdf}. You asked: {prompt}"
+        with st.spinner("Generating answer..."):
+            try:
+                response = requests.post(
+                    "http://127.0.0.1:8000/ask", 
+                    json={"question": prompt}
+                )
+                
+                if response.status_code == 200:
+                    bot_response = response.json().get("answer", "No answer found.")
+                else:
+                    bot_response = "Error: Failed to connect to the backend API."
+            except Exception as e:
+                bot_response = f"Connection error: {e}"
         
         st.session_state.messages.append({"role": "assistant", "content": bot_response})
         with st.chat_message("assistant"):
