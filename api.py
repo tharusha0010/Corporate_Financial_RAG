@@ -2,7 +2,7 @@ import os
 import sys
 os.add_dll_directory(os.path.join(sys.prefix, 'Lib', 'site-packages', 'torch', 'lib'))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from typing import List
 
@@ -31,18 +31,23 @@ class QueryResponse(BaseModel):
 
 print("Initializing RAG Pipeline... Please wait.")
 
+vectorstore = None
+vector_retriever = None
+bm25_retriever = None
+chunks = []
+
 pdf_path = "data/report.pdf"
-loader = PyPDFLoader(pdf_path)
-documents = loader.load()
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
-chunks = text_splitter.split_documents(documents)
-
-embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embedding_model)
-
-vector_retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
-bm25_retriever = BM25Retriever.from_documents(chunks)
-bm25_retriever.k = 5
+if os.path.exists(pdf_path):
+    loader = PyPDFLoader(pdf_path)
+    documents = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
+    chunks = text_splitter.split_documents(documents)
+    
+    embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embedding_model)
+    vector_retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    bm25_retriever = BM25Retriever.from_documents(chunks)
+    bm25_retriever.k = 5
 
 cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
@@ -61,8 +66,35 @@ chain = prompt | llm
 
 print("RAG Pipeline Ready! Server is running.")
 
+@app.post("/upload")
+async def upload_pdf(file: UploadFile = File(...)):
+    global vectorstore, vector_retriever, bm25_retriever, chunks
+    os.makedirs("data", exist_ok=True)
+    file_path = os.path.join("data", file.filename)
+    
+    with open(file_path, "wb") as buffer:
+        buffer.write(await file.read())
+        
+    loader = PyPDFLoader(file_path)
+    documents = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
+    chunks = text_splitter.split_documents(documents)
+    
+    embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    vectorstore = Chroma.from_documents(chunks, embedding_model, persist_directory="chroma_db")
+    
+    vector_retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+    bm25_retriever = BM25Retriever.from_documents(chunks)
+    bm25_retriever.k = 5
+    
+    return {"message": "PDF processed successfully", "filename": file.filename}
+
 @app.post("/ask", response_model=QueryResponse)
 def ask_question(request: QueryRequest):
+    global vector_retriever, bm25_retriever
+    if not vector_retriever or not bm25_retriever:
+        return QueryResponse(answer="Please upload and process a PDF first.", sources=[])
+        
     query = request.question
     
     vector_results = vector_retriever.invoke(query)
