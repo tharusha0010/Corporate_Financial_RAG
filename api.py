@@ -18,7 +18,7 @@ from langchain_core.prompts import PromptTemplate
 app = FastAPI(title="Corporate Financial RAG API")
 
 class QueryRequest(BaseModel):
-    query: str
+    question: str
 
 class SourceInfo(BaseModel):
     page_num: int
@@ -63,7 +63,7 @@ print("RAG Pipeline Ready! Server is running.")
 
 @app.post("/ask", response_model=QueryResponse)
 def ask_question(request: QueryRequest):
-    query = request.query
+    query = request.question
     
     vector_results = vector_retriever.invoke(query)
     bm25_results = bm25_retriever.invoke(query)
