@@ -1,4 +1,4 @@
-```markdown
+
 # 📈 Corporate Financial RAG System
 
 ### Advanced Financial Document Analysis — AI & Machine Learning Engineering
@@ -161,7 +161,5 @@ User Question (Streamlit UI)
 This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
 
 *3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
-
-```
 
 ```
