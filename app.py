@@ -1,78 +1,71 @@
 import streamlit as st
-import requests
+import time
 
-st.set_page_config(
-    page_title="Corporate Financial RAG Chatbot",
-    page_icon="📈",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
-
-st.markdown("""
-    <style>
-        .main { background-color: #f8f9fa; }
-        .stChatMessage { border-radius: 10px; padding: 10px; margin-bottom: 10px; }
-    </style>
-""", unsafe_allow_html=True)
-
-with st.sidebar:
-    st.image("https://img.icons8.com/color/96/combo-chart--v1.png", width=80)
-    st.title("System Control")
-    st.info("Connected to FastAPI RAG Backend.")
-    
-    if st.button("Clear Chat History", type="secondary"):
-        st.session_state.messages = []
-        st.rerun()
-        
-    st.markdown("---")
-    st.markdown("**Model:** Gemma 3 (12B)")
-    st.markdown("**Document:** Tesla 2023 10-K")
-
-st.title("📈 Corporate Financial RAG Chatbot")
-st.caption("Advanced AI assistant for querying corporate financial reports with high accuracy.")
+st.set_page_config(page_title="Financial RAG System", page_icon="📈", layout="centered")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "is_processed" not in st.session_state:
+    st.session_state.is_processed = False
+if "active_pdf" not in st.session_state:
+    st.session_state.active_pdf = ""
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-        if "sources" in message and message["sources"]:
-            with st.expander("📚 View Retrieved Sources"):
-                for idx, src in enumerate(message["sources"], 1):
-                    st.markdown(f"**Source {idx}:**")
-                    st.text(src)
+with st.sidebar:
+    st.title("📈 Financial AI")
+    st.write("Upload a corporate financial document for analysis.")
+    st.divider()
 
-if prompt := st.chat_input("Ask any question from the financial report..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    st.write("📄 **Upload your PDF**")
+    
+    uploaded_file = st.file_uploader("", type="pdf", label_visibility="collapsed")
 
-    with st.chat_message("assistant"):
-        with st.spinner("Analyzing financial data..."):
-            try:
-                res = requests.post("http://127.0.0.1:8000/ask", json={"question": prompt})
-                if res.status_code == 200:
-                    data = res.json()
-                    answer = data.get("answer", "No answer found.")
-                    sources = data.get("sources", [])
-                    
-                    st.markdown(answer)
-                    
-                    if sources:
-                        with st.expander("📚 View Retrieved Sources"):
-                            for idx, src in enumerate(sources, 1):
-                                st.markdown(f"**Source {idx}:**")
-                                st.text(src)
-                                
-                    st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": answer, 
-                        "sources": sources
-                    })
-                else:
-                    error_msg = f"Error: API returned status code {res.status_code}"
-                    st.error(error_msg)
-            except Exception as e:
-                error_msg = f"Connection Error: Could not connect to backend. ({e})"
-                st.error(error_msg)
+    if uploaded_file is not None:
+        st.info(f"📎 {uploaded_file.name}")
+
+        if st.button("⚙️ Process PDF", use_container_width=True):
+            with st.spinner("Processing your document..."):
+                time.sleep(3) 
+                
+                st.session_state.is_processed = True
+                st.session_state.active_pdf = uploaded_file.name
+            
+            st.success("✅ PDF processed successfully!")
+            
+    if st.session_state.is_processed:
+        st.divider()
+        st.success(f"📄 **Active document:**\n\n{st.session_state.active_pdf}")
+
+    st.divider()
+    
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.rerun()
+
+st.title("📈 Corporate Financial RAG")
+st.write("Intelligent retrieval and synthesis of corporate financial data.")
+
+if not st.session_state.is_processed:
+    st.info("👈 Upload a financial document (e.g., 10-K report) from the sidebar to get started.")
+    st.markdown("""
+    ### How it works
+    1. 📄 **Upload a PDF**
+    2. ⚙️ **Process the document**
+    3. 💬 **Ask financial questions**
+    4. 🤖 **Get accurate, data-driven answers**
+    """)
+    
+else:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("Ask a question about the financial document..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        bot_response = f"This is an answer based on {st.session_state.active_pdf}. You asked: {prompt}"
+        
+        st.session_state.messages.append({"role": "assistant", "content": bot_response})
+        with st.chat_message("assistant"):
+            st.markdown(bot_response)
