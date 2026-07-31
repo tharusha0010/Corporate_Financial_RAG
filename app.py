@@ -88,7 +88,9 @@ else:
                     if sources:
                         bot_response += "\n\n**Sources:**"
                         for src in sources:
-                            bot_response += f"\n- Page {src['page_num']} (Score: {src['score']:.2f}): {src['snippet']}"
+                            # මෙහි File Name එකත් සමඟම Page Number එක Print වේ
+                            file_name = src.get('file_name', 'Unknown Document')
+                            bot_response += f"\n- **{file_name}** | Page {src['page_num']} (Score: {src['score']:.2f}): {src['snippet']}"
                 else:
                     bot_response = "Error: Failed to connect to the backend API."
             except Exception as e:
