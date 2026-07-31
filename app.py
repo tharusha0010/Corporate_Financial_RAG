@@ -7,39 +7,42 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "is_processed" not in st.session_state:
     st.session_state.is_processed = False
-if "active_pdf" not in st.session_state:
-    st.session_state.active_pdf = ""
+if "active_pdfs" not in st.session_state:
+    st.session_state.active_pdfs = []
 
 with st.sidebar:
     st.title("📈 Financial AI")
-    st.write("Upload a corporate financial document for analysis.")
+    st.write("Upload corporate financial documents for analysis.")
     st.divider()
 
-    st.write("📄 **Upload your PDF**")
+    st.write("📄 **Upload your PDFs**")
     
-    uploaded_file = st.file_uploader("Upload PDF", type="pdf", label_visibility="collapsed")
+    # accept_multiple_files=True යෙදීම
+    uploaded_files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True, label_visibility="collapsed")
 
-    if uploaded_file is not None:
-        st.info(f"📎 {uploaded_file.name}")
+    if uploaded_files:
+        for f in uploaded_files:
+            st.info(f"📎 {f.name}")
 
-        if st.button("⚙️ Process PDF", use_container_width=True):
-            with st.spinner("Processing your document..."):
+        if st.button("⚙️ Process PDFs", use_container_width=True):
+            with st.spinner("Processing your documents..."):
                 try:
-                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")}
-                    response = requests.post("http://127.0.0.1:8000/upload", files=files)
+                    # ෆයිල් කිහිපයක් එකවර යැවීමට සකස් කිරීම
+                    files_payload = [("files", (f.name, f.getvalue(), "application/pdf")) for f in uploaded_files]
+                    response = requests.post("http://127.0.0.1:8000/upload", files=files_payload)
                     
                     if response.status_code == 200:
                         st.session_state.is_processed = True
-                        st.session_state.active_pdf = uploaded_file.name
-                        st.success("✅ PDF processed successfully!")
+                        st.session_state.active_pdfs = [f.name for f in uploaded_files]
+                        st.success("✅ PDFs processed successfully!")
                     else:
-                        st.error("Error: Failed to process PDF on backend.")
+                        st.error("Error: Failed to process PDFs on backend.")
                 except Exception as e:
                     st.error(f"Connection error: {e}")
             
     if st.session_state.is_processed:
         st.divider()
-        st.success(f"📄 **Active document:**\n\n{st.session_state.active_pdf}")
+        st.success("📄 **Active documents:**\n\n" + "\n".join([f"- {name}" for name in st.session_state.active_pdfs]))
 
     st.divider()
     
@@ -51,11 +54,11 @@ st.title("📈 Corporate Financial RAG")
 st.write("Intelligent retrieval and synthesis of corporate financial data.")
 
 if not st.session_state.is_processed:
-    st.info("👈 Upload a financial document (e.g., 10-K report) from the sidebar to get started.")
+    st.info("👈 Upload financial documents (e.g., 10-K reports) from the sidebar to get started.")
     st.markdown("""
     ### How it works
-    1. 📄 **Upload a PDF**
-    2. ⚙️ **Process the document**
+    1. 📄 **Upload one or more PDFs**
+    2. ⚙️ **Process the documents**
     3. 💬 **Ask financial questions**
     4. 🤖 **Get accurate, data-driven answers**
     """)
@@ -65,7 +68,7 @@ else:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ask a question about the financial document..."):
+    if prompt := st.chat_input("Ask a question about the financial documents..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
