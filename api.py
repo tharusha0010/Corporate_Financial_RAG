@@ -1,6 +1,4 @@
 import os
-import sys
-os.add_dll_directory(os.path.join(sys.prefix, 'Lib', 'site-packages', 'torch', 'lib'))
 
 from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
@@ -14,7 +12,6 @@ from langchain_community.retrievers import BM25Retriever
 from sentence_transformers import CrossEncoder
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
-
 
 app = FastAPI(title="OmniDoc-RAG API")
 
@@ -52,7 +49,6 @@ if os.path.exists(pdf_path):
     bm25_retriever.k = 5
 
 cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-
 
 prompt_template = """You are a precise AI assistant for question-answering tasks. 
 Use the following pieces of retrieved context to answer the question at the end. 
@@ -159,10 +155,9 @@ def ask_question(request: QueryRequest):
     
     answer_text = response.content if hasattr(response, 'content') else str(response)
 
-    # --- Backend Post-processing Logic (ලේඛනයේ නැතිනම් නිවැරදි කිරීම සඳහා) ---
     lower_answer = answer_text.lower()
     if any(phrase in lower_answer for phrase in ["don't know", "not available", "not contain", "no information", "cannot find", "do not contain", "discuss"]):
         answer_text = "The answer is not available in the provided documents."
-        sources = []  # උත්තරයක් නැති විට Sources පෙන්වීම සම්පූර්ණයෙන්ම වළකයි
+        sources = []  
 
     return QueryResponse(answer=answer_text, sources=sources)
