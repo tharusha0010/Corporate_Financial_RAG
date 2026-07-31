@@ -1,33 +1,33 @@
-# 📈 Corporate Financial RAG System
+# 📚 OmniDoc-RAG
 
-### Advanced Financial Document Analysis — AI & Machine Learning Engineering
+### Advanced Universal Document Analysis & RAG System
 
-> **Scope:** Enterprise-grade intelligent retrieval and synthesis of corporate financial data (e.g., Annual 10-K reports)
+> **Scope:** Enterprise-grade intelligent retrieval and synthesis of information from diverse PDF documents.
 
-A full-stack, production-grade Retrieval-Augmented Generation (RAG) system designed to accurately answer complex queries based on corporate financial documents. The system uses a **Hybrid Search Pipeline**, a **Cross-Encoder Reranker**, and a locally hosted LLM via OLLAMA to ensure high-precision data retrieval and complete data privacy. 
+OmniDoc-RAG is a full-stack, production-grade Retrieval-Augmented Generation (RAG) system designed to accurately answer complex queries based on any uploaded PDF documents. The system uses a **Hybrid Search Pipeline**, a **Cross-Encoder Reranker**, and a locally hosted LLM via OLLAMA to ensure high-precision data retrieval and complete data privacy. 
 
 ---
 
 ## ✨ Features
 
-- **Multiple PDF Processing** — Simultaneously upload and process one or more financial documents directly through the user interface.
+- **Universal Document Processing** — Simultaneously upload and process one or more PDF documents (e.g., Research Papers, Lecture Notes, Contracts) directly through the user interface.
 - **Hybrid Search Retrieval** — Combines Semantic Vector Search (ChromaDB + HuggingFace Embeddings) with Keyword Search (BM25) for absolute precision.
 - **Cross-Encoder Reranking** — Uses `ms-marco-MiniLM-L-6-v2` to intelligently rerank and filter the most relevant context chunks.
-- **Local LLM Integration** — Powered by **Gemma 3 (12B)** via OLLAMA for generating accurate financial answers with zero API costs.
-- **Scientific Evaluation** — Built-in RAGAS framework script to measure model Faithfulness and Answer Relevancy (Achieving ~85% Relevancy Score).
-- **Full-Stack Architecture** — Robust backend powered by **FastAPI** paired with a **Streamlit** UI.
-- **Source Citations** — Dynamically displays referenced page numbers and document snippets for transparency.
+- **Local LLM Integration** — Powered by state-of-the-art open-source models via OLLAMA for generating accurate answers with zero API costs and 100% privacy.
+- **Scientific Evaluation** — Built-in RAGAS framework script to measure model Faithfulness and Answer Relevancy.
+- **Full-Stack Architecture** — Robust backend powered by **FastAPI** paired with an interactive **Streamlit** UI.
+- **Source Citations** — Dynamically displays referenced document names, page numbers, and text snippets for maximum transparency.
 
 ---
 
 ## 📁 Project Structure
 
 ```text
-Corporate_Financial_RAG/
+OmniDoc-RAG/
 ├── app.py                              # Streamlit UI (Frontend)
 ├── api.py                              # FastAPI Backend (RAG Pipeline)
 ├── evaluate.py                         # RAGAS Evaluation Script
-├── data/                               # Directory for uploaded financial documents
+├── data/                               # Directory for uploaded documents
 ├── requirements.txt                    # Python dependencies
 └── README.md                           # This file
 
@@ -41,9 +41,8 @@ Corporate_Financial_RAG/
 | --- | --- |
 | **Python** | 3.8 or higher |
 | **OLLAMA** | Installed and running ([ollama.com](https://ollama.com)) |
-| **Model** | `gemma3:12b` |
-| **Hardware** | PC/Laptop capable of running local 12B parameter LLMs |
-| **Data** | One or more valid PDF financial reports to upload via the UI |
+| **Model** | `llama3` or `gemma3:12b` (Configurable based on hardware) |
+| **Hardware** | PC/Laptop capable of running local LLMs (GPU recommended) |
 
 ---
 
@@ -52,8 +51,8 @@ Corporate_Financial_RAG/
 ### 1. Clone the project
 
 ```bash
-git clone [https://github.com/tharusha0010/Corporate_Financial_RAG.git](https://github.com/tharusha0010/Corporate_Financial_RAG.git)
-cd Corporate_Financial_RAG
+git clone [https://github.com/tharusha0010/OmniDoc-RAG.git](https://github.com/tharusha0010/OmniDoc-RAG.git)
+cd OmniDoc-RAG
 
 ```
 
@@ -75,10 +74,10 @@ pip install -r requirements.txt
 
 ### 4. Install and start OLLAMA
 
-Download from [ollama.com](https://ollama.com), then:
+Download from [ollama.com](https://ollama.com), then run your preferred model:
 
 ```bash
-ollama run gemma3:12b
+ollama run llama3
 
 ```
 
@@ -101,10 +100,9 @@ streamlit run app.py
 ```
 
 3. The app will open at `http://localhost:8501`.
-4. **Upload PDFs:** Use the sidebar to upload one or more financial PDF documents, then click **"Process PDFs"**.
-5. **Ask a question** (e.g., *"What is the total revenue for 2023?"*) in the chat interface.
-6. Review the synthesized answer and view the retrieved **Sources** (page numbers and snippets) to verify the data against the original PDFs.
-7. **(Optional)** Run `python evaluate.py` to test the system's accuracy using RAGAS.
+4. **Upload PDFs:** Use the sidebar to upload one or more PDF documents, then click **"Process PDFs"**.
+5. **Ask a question** in the chat interface.
+6. Review the synthesized answer and view the retrieved **Sources** (Document Name, Page Number, and Snippets) to verify the data against the original PDFs.
 
 ---
 
@@ -133,7 +131,7 @@ User Question (Streamlit UI)
                   ▼
 ┌───────────────────────────────────┐
 │          Generation (LLM)         │
-│  OLLAMA (gemma3:12b)              │
+│  OLLAMA (Local LLM)               │
 │  → Synthesizes Answer & Sources   │
 └─────────────────┬─────────────────┘
                   ▼
@@ -152,7 +150,6 @@ User Question (Streamlit UI)
 | `langchain` ecosystem | RAG pipeline orchestration |
 | `sentence-transformers` | Embeddings and Cross-Encoder reranking |
 | `chromadb` | Vector database for semantic search |
-| `ragas` | Evaluation metrics (Faithfulness & Relevancy) |
 
 ---
 
@@ -163,4 +160,7 @@ This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
 *3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
 
 ```
+
+
+
 

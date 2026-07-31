@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Financial RAG System", page_icon="📈", layout="centered")
+st.set_page_config(page_title="OmniDoc-RAG", page_icon="📚", layout="centered")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -11,13 +11,12 @@ if "active_pdfs" not in st.session_state:
     st.session_state.active_pdfs = []
 
 with st.sidebar:
-    st.title("📈 Financial AI")
-    st.write("Upload corporate financial documents for analysis.")
+    st.title("📚 OmniDoc-RAG")
+    st.write("Upload your PDF documents for intelligent analysis and Q&A.")
     st.divider()
 
     st.write("📄 **Upload your PDFs**")
     
-    # accept_multiple_files=True යෙදීම
     uploaded_files = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True, label_visibility="collapsed")
 
     if uploaded_files:
@@ -27,7 +26,6 @@ with st.sidebar:
         if st.button("⚙️ Process PDFs", use_container_width=True):
             with st.spinner("Processing your documents..."):
                 try:
-                    # ෆයිල් කිහිපයක් එකවර යැවීමට සකස් කිරීම
                     files_payload = [("files", (f.name, f.getvalue(), "application/pdf")) for f in uploaded_files]
                     response = requests.post("http://127.0.0.1:8000/upload", files=files_payload)
                     
@@ -50,17 +48,17 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-st.title("📈 Corporate Financial RAG")
-st.write("Intelligent retrieval and synthesis of corporate financial data.")
+st.title("📚 OmniDoc-RAG System")
+st.write("Upload any PDF document, ask questions, and get accurate, data-driven answers.")
 
 if not st.session_state.is_processed:
-    st.info("👈 Upload financial documents (e.g., 10-K reports) from the sidebar to get started.")
+    st.info("👈 Upload your PDF documents from the sidebar to get started.")
     st.markdown("""
     ### How it works
     1. 📄 **Upload one or more PDFs**
     2. ⚙️ **Process the documents**
-    3. 💬 **Ask financial questions**
-    4. 🤖 **Get accurate, data-driven answers**
+    3. 💬 **Ask questions**
+    4. 🤖 **Get answers with exact page citations**
     """)
     
 else:
@@ -68,7 +66,7 @@ else:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ask a question about the financial documents..."):
+    if prompt := st.chat_input("Ask a question about the uploaded documents..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -88,7 +86,6 @@ else:
                     if sources:
                         bot_response += "\n\n**Sources:**"
                         for src in sources:
-                            # මෙහි File Name එකත් සමඟම Page Number එක Print වේ
                             file_name = src.get('file_name', 'Unknown Document')
                             bot_response += f"\n- **{file_name}** | Page {src['page_num']} (Score: {src['score']:.2f}): {src['snippet']}"
                 else:
