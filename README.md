@@ -161,6 +161,6 @@ User Question (Streamlit UI)
 
 ## 📄 Author
 
-This project was developed by **H.A.T.S. Ariyarathna** 
+This project was developed by **H.A.T.S. Ariyarathna.** 
 
 ```
