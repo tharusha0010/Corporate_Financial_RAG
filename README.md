@@ -155,12 +155,8 @@ User Question (Streamlit UI)
 
 ## 📄 Author
 
-This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
+This project was developed by **H.A.T.S. Ariyarathna** 
 
 *3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
 
 ```
-
-
-
-
