@@ -103,6 +103,12 @@ streamlit run app.py
 4. **Upload PDFs:** Use the sidebar to upload one or more PDF documents, then click **"Process PDFs"**.
 5. **Ask a question** in the chat interface.
 6. Review the synthesized answer and view the retrieved **Sources** (Document Name, Page Number, and Snippets) to verify the data against the original PDFs.
+7. **Run Evaluation (Optional):** To evaluate the RAG pipeline performance using the RAGAS framework, run:
+
+```bash
+python evaluate.py
+
+```
 
 ---
 
@@ -155,7 +161,7 @@ User Question (Streamlit UI)
 
 ## 📄 Author
 
-This project was developed by **H.A.T.S. Ariyarathna** 
+This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
 
 *3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
 
