@@ -1,4 +1,3 @@
-
 # 📈 Corporate Financial RAG System
 
 ### Advanced Financial Document Analysis — AI & Machine Learning Engineering
@@ -11,6 +10,7 @@ A full-stack, production-grade Retrieval-Augmented Generation (RAG) system desig
 
 ## ✨ Features
 
+- **Multiple PDF Processing** — Simultaneously upload and process one or more financial documents directly through the user interface.
 - **Hybrid Search Retrieval** — Combines Semantic Vector Search (ChromaDB + HuggingFace Embeddings) with Keyword Search (BM25) for absolute precision.
 - **Cross-Encoder Reranking** — Uses `ms-marco-MiniLM-L-6-v2` to intelligently rerank and filter the most relevant context chunks.
 - **Local LLM Integration** — Powered by **Gemma 3 (12B)** via OLLAMA for generating accurate financial answers with zero API costs.
@@ -27,8 +27,7 @@ Corporate_Financial_RAG/
 ├── app.py                              # Streamlit UI (Frontend)
 ├── api.py                              # FastAPI Backend (RAG Pipeline)
 ├── evaluate.py                         # RAGAS Evaluation Script
-├── data/
-│   └── report.pdf                      # Financial document (e.g., Tesla 10-K)
+├── data/                               # Directory for uploaded financial documents
 ├── requirements.txt                    # Python dependencies
 └── README.md                           # This file
 
@@ -44,7 +43,7 @@ Corporate_Financial_RAG/
 | **OLLAMA** | Installed and running ([ollama.com](https://ollama.com)) |
 | **Model** | `gemma3:12b` |
 | **Hardware** | PC/Laptop capable of running local 12B parameter LLMs |
-| **Data** | A valid PDF financial report placed inside the `data/` directory |
+| **Data** | One or more valid PDF financial reports to upload via the UI |
 
 ---
 
@@ -88,23 +87,24 @@ ollama run gemma3:12b
 ## 📖 How to Use
 
 1. **Start the API Backend:** Open a terminal, activate the virtual environment, and run:
+
 ```bash
 uvicorn api:app --reload
 
 ```
 
-
 2. **Start the Streamlit UI:** Open a second terminal, activate the virtual environment, and run:
+
 ```bash
 streamlit run app.py
 
 ```
 
-
 3. The app will open at `http://localhost:8501`.
-4. **Ask a question** (e.g., *"What is the total revenue for 2023?"*) in the chat interface.
-5. Review the synthesized answer and click **"📚 View Retrieved Sources"** to verify the data against the original PDF.
-6. **(Optional)** Run `python evaluate.py` to test the system's accuracy using RAGAS.
+4. **Upload PDFs:** Use the sidebar to upload one or more financial PDF documents, then click **"Process PDFs"**.
+5. **Ask a question** (e.g., *"What is the total revenue for 2023?"*) in the chat interface.
+6. Review the synthesized answer and view the retrieved **Sources** (page numbers and snippets) to verify the data against the original PDFs.
+7. **(Optional)** Run `python evaluate.py` to test the system's accuracy using RAGAS.
 
 ---
 
@@ -132,7 +132,7 @@ User Question (Streamlit UI)
 └─────────────────┬─────────────────┘
                   ▼
 ┌───────────────────────────────────┐
-│         Generation (LLM)          │
+│          Generation (LLM)         │
 │  OLLAMA (gemma3:12b)              │
 │  → Synthesizes Answer & Sources   │
 └─────────────────┬─────────────────┘
@@ -163,3 +163,4 @@ This project was developed by **H.A.T.S. Ariyarathna** (Index: D/BCE/24/0010)
 *3rd-year Computer Engineering Undergraduate | General Sir John Kotelawala Defence University (KDU)*
 
 ```
+
