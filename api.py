@@ -21,6 +21,7 @@ class QueryRequest(BaseModel):
     question: str
 
 class SourceInfo(BaseModel):
+    file_name: str
     page_num: int
     score: float
     snippet: str
@@ -126,10 +127,15 @@ def ask_question(request: QueryRequest):
     
     for score, doc in top_3_docs:
         page_num = doc.metadata.get('page', 0) + 1 
-        context_parts.append(f"--- Page {page_num} ---\n{doc.page_content}")
+        
+        # Metadata හරහා ෆයිල් එකේ නම (Source Name) ලබා ගැනීම
+        source_path = doc.metadata.get('source', 'Unknown Document')
+        file_name = os.path.basename(source_path)
+        
+        context_parts.append(f"--- Document: {file_name} | Page {page_num} ---\n{doc.page_content}")
         
         snippet = doc.page_content[:150].replace('\n', ' ') + "..."
-        sources.append(SourceInfo(page_num=page_num, score=float(score), snippet=snippet))
+        sources.append(SourceInfo(file_name=file_name, page_num=page_num, score=float(score), snippet=snippet))
         
     context_text = "\n\n".join(context_parts)
 
