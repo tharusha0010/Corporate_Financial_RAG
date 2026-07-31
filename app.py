@@ -17,7 +17,6 @@ with st.sidebar:
 
     st.write("📄 **Upload your Documents**")
     
-    
     uploaded_files = st.file_uploader(
         "Upload Documents", 
         type=["pdf", "txt", "csv"], 
@@ -34,7 +33,6 @@ with st.sidebar:
                 try:
                     files_payload = []
                     for f in uploaded_files:
-                        
                         if f.name.endswith(".pdf"):
                             mime = "application/pdf"
                         elif f.name.endswith(".txt"):
@@ -102,7 +100,8 @@ else:
                     bot_response = data.get("answer", "No answer found.")
                     sources = data.get("sources", [])
                     
-                    if sources:
+                    
+                    if sources and len(sources) > 0:
                         bot_response += "\n\n**Sources:**"
                         for src in sources:
                             file_name = src.get('file_name', 'Unknown Document')
