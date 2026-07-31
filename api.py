@@ -67,18 +67,26 @@ chain = prompt | llm
 print("RAG Pipeline Ready! Server is running.")
 
 @app.post("/upload")
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdfs(files: List[UploadFile] = File(...)):
     global vectorstore, vector_retriever, bm25_retriever, chunks
     os.makedirs("data", exist_ok=True)
-    file_path = os.path.join("data", file.filename)
     
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+    all_chunks = []
+    filenames = []
+    
+    for file in files:
+        file_path = os.path.join("data", file.filename)
+        filenames.append(file.filename)
         
-    loader = PyPDFLoader(file_path)
-    documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
-    chunks = text_splitter.split_documents(documents)
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+            
+        loader = PyPDFLoader(file_path)
+        documents = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
+        all_chunks.extend(text_splitter.split_documents(documents))
+        
+    chunks = all_chunks
     
     embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
     vectorstore = Chroma.from_documents(chunks, embedding_model, persist_directory="chroma_db")
@@ -87,7 +95,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     bm25_retriever = BM25Retriever.from_documents(chunks)
     bm25_retriever.k = 5
     
-    return {"message": "PDF processed successfully", "filename": file.filename}
+    return {"message": "PDFs processed successfully", "filenames": filenames}
 
 @app.post("/ask", response_model=QueryResponse)
 def ask_question(request: QueryRequest):
