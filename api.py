@@ -6,7 +6,7 @@ from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 from typing import List
 
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -15,7 +15,8 @@ from sentence_transformers import CrossEncoder
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
 
-app = FastAPI(title="Corporate Financial RAG API")
+
+app = FastAPI(title="OmniDoc-RAG API")
 
 class QueryRequest(BaseModel):
     question: str
@@ -30,7 +31,7 @@ class QueryResponse(BaseModel):
     answer: str
     sources: List[SourceInfo]
 
-print("Initializing RAG Pipeline... Please wait.")
+print("Initializing OmniDoc-RAG Pipeline... Please wait.")
 
 vectorstore = None
 vector_retriever = None
@@ -52,8 +53,12 @@ if os.path.exists(pdf_path):
 
 cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
-prompt_template = """Use the following pieces of context to answer the question at the end. 
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+prompt_template = """You are a precise AI assistant for question-answering tasks. 
+Use the following pieces of retrieved context to answer the question at the end. 
+If the answer cannot be found completely within the provided context, you MUST output exact text: 
+"The answer is not available in the provided documents."
+Do not add any extra explanations, sentences, or guesses.
 
 Context:
 {context}
@@ -65,10 +70,10 @@ prompt = PromptTemplate(template=prompt_template, input_variables=["context", "q
 llm = ChatOllama(model="gemma3:12b")
 chain = prompt | llm
 
-print("RAG Pipeline Ready! Server is running.")
+print("OmniDoc-RAG Pipeline Ready! Server is running.")
 
 @app.post("/upload")
-async def upload_pdfs(files: List[UploadFile] = File(...)):
+async def upload_documents(files: List[UploadFile] = File(...)):
     global vectorstore, vector_retriever, bm25_retriever, chunks
     os.makedirs("data", exist_ok=True)
     
@@ -82,27 +87,36 @@ async def upload_pdfs(files: List[UploadFile] = File(...)):
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
             
-        loader = PyPDFLoader(file_path)
+        if file.filename.endswith(".pdf"):
+            loader = PyPDFLoader(file_path)
+        elif file.filename.endswith(".txt"):
+            loader = TextLoader(file_path, encoding="utf-8")
+        elif file.filename.endswith(".csv"):
+            loader = CSVLoader(file_path)
+        else:
+            continue 
+            
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
         all_chunks.extend(text_splitter.split_documents(documents))
         
-    chunks = all_chunks
+    if all_chunks:
+        chunks = all_chunks
+        
+        embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+        vectorstore = Chroma.from_documents(chunks, embedding_model, persist_directory="chroma_db")
+        
+        vector_retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+        bm25_retriever = BM25Retriever.from_documents(chunks)
+        bm25_retriever.k = 5
     
-    embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-    vectorstore = Chroma.from_documents(chunks, embedding_model, persist_directory="chroma_db")
-    
-    vector_retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
-    bm25_retriever = BM25Retriever.from_documents(chunks)
-    bm25_retriever.k = 5
-    
-    return {"message": "PDFs processed successfully", "filenames": filenames}
+    return {"message": "Documents processed successfully", "filenames": filenames}
 
 @app.post("/ask", response_model=QueryResponse)
 def ask_question(request: QueryRequest):
     global vector_retriever, bm25_retriever
     if not vector_retriever or not bm25_retriever:
-        return QueryResponse(answer="Please upload and process a PDF first.", sources=[])
+        return QueryResponse(answer="Please upload and process a document first.", sources=[])
         
     query = request.question
     
@@ -115,6 +129,9 @@ def ask_question(request: QueryRequest):
             unique_docs[doc.page_content] = doc
 
     combined_results = list(unique_docs.values())
+    if not combined_results:
+        return QueryResponse(answer="The answer is not available in the provided documents.", sources=[])
+
     pairs = [[query, doc.page_content] for doc in combined_results]
     
     scores = cross_encoder.predict(pairs)
@@ -128,7 +145,6 @@ def ask_question(request: QueryRequest):
     for score, doc in top_3_docs:
         page_num = doc.metadata.get('page', 0) + 1 
         
-        # Metadata හරහා ෆයිල් එකේ නම (Source Name) ලබා ගැනීම
         source_path = doc.metadata.get('source', 'Unknown Document')
         file_name = os.path.basename(source_path)
         
@@ -140,5 +156,13 @@ def ask_question(request: QueryRequest):
     context_text = "\n\n".join(context_parts)
 
     response = chain.invoke({"context": context_text, "question": query})
+    
+    answer_text = response.content if hasattr(response, 'content') else str(response)
 
-    return QueryResponse(answer=response.content, sources=sources)
+    # --- Backend Post-processing Logic (ලේඛනයේ නැතිනම් නිවැරදි කිරීම සඳහා) ---
+    lower_answer = answer_text.lower()
+    if any(phrase in lower_answer for phrase in ["don't know", "not available", "not contain", "no information", "cannot find", "do not contain", "discuss"]):
+        answer_text = "The answer is not available in the provided documents."
+        sources = []  # උත්තරයක් නැති විට Sources පෙන්වීම සම්පූර්ණයෙන්ම වළකයි
+
+    return QueryResponse(answer=answer_text, sources=sources)
