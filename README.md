@@ -1,3 +1,4 @@
+
 # 📚 OmniDoc-RAG
 
 ### Advanced Universal Document Analysis & RAG System
@@ -5,6 +6,22 @@
 > **Scope:** Enterprise-grade intelligent retrieval and synthesis of information from diverse PDF documents.
 
 OmniDoc-RAG is a full-stack, production-grade Retrieval-Augmented Generation (RAG) system designed to accurately answer complex queries based on any uploaded PDF documents. The system uses a **Hybrid Search Pipeline**, a **Cross-Encoder Reranker**, and a locally hosted LLM via OLLAMA to ensure high-precision data retrieval and complete data privacy. 
+
+---
+
+## 📸 System Previews
+
+**1. Precise Context Retrieval & Dynamic Citations**  
+The system accurately extracts complex information (e.g., safety precautions and PPE requirements) from technical manuals, displaying the exact page numbers and text snippets used to generate the answer.
+![Context Retrieval](images/img01.png)
+
+**2. Financial Data Extraction**  
+Seamlessly retrieves specific numerical data, such as net income, directly from dense corporate 10-K financial reports with high accuracy.
+![Financial Data Extraction](images/img02.png)
+
+**3. Strict Anti-Hallucination Guardrails**  
+If a question is asked that cannot be answered using the uploaded context (e.g., general knowledge), the system strictly halts and outputs "The answer is not available in the provided documents," preventing fabricated responses.
+![Anti-Hallucination](images/img03.png)
 
 ---
 
@@ -28,6 +45,7 @@ OmniDoc-RAG/
 ├── api.py                              # FastAPI Backend (RAG Pipeline)
 ├── evaluate.py                         # RAGAS Evaluation Script
 ├── data/                               # Directory for uploaded documents
+├── images/                             # UI Screenshots
 ├── requirements.txt                    # Python dependencies
 └── README.md                           # This file
 
@@ -161,6 +179,7 @@ User Question (Streamlit UI)
 
 ## 📄 Author
 
-This project was developed by **H.A.T.S. Ariyarathna.** 
+This project was developed by **H.A.T.S. Ariyarathna.**
 
 ```
+
